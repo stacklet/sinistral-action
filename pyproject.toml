@@ -1,0 +1,92 @@
+[project]
+name = "sinistral-action"
+version = "1.0.0"
+description = "GitHub Action for scanning Infrastructure as Code"
+maintainers = [ { name = "Stacklet Engineering", email = "foss+sinistral-action@stacklet.io" } ]
+authors = [ { name = "Stacklet Engineering", email = "foss+sinistral-action@stacklet.io" } ]
+requires-python = ">=3.12"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=9",
+  "ruff>=0.11",
+  "ty>=0.0.31",
+]
+
+[tool.ruff]
+line-length = 100
+preview = true
+lint.extend-select = [
+  "A",    # flake8-builtins
+  "ANN",  # flake8-annotations
+  "ARG",  # flake8-unused-arguments
+  "B",    # flake8-bugbear
+  "BLE",  # flake8-blind-except
+  "C4",   # flake8-comprehensions
+  "D",    # pydocstyle
+  "DTZ",  # flake8-datetimez
+  "EM",   # flake8-errmsg
+  "EXE",  # flake8-executable
+  "FA",   # flake8-future-annotations
+  "FBT",  # flake8-boolean-trap
+  "FLY",  # flynt
+  "FURB", # refurb
+  "G",    # flake8-logging-format
+  "I",    # isort
+  "ICN",  # flake8-import-conventions
+  "ISC",  # flake8-implicit-str-concat
+  "LOG",  # flake8-logging
+  "N",    # pep8-naming
+  "PERF", # Perflint
+  "PGH",  # pygrep-hooks
+  "PIE",  # flake8-pie
+  "PLC",  # Pylint convention
+  "PLE",  # Pylint error
+  "PLW",  # Pylint warning
+  "PT",   # flake8-pytest-style
+  "PTH",  # flake8-use-pathlib
+  "Q",    # flake8-quotes
+  "RET",  # flake8-return
+  "RSE",  # flake8-raise
+  "RUF",  # Ruff-specific
+  "S",    # flake8-bandit
+  "T10",  # flake8-debugger
+  "T20",  # flake8-print
+  "TCH",  # flake8-type-checking
+  "TID",  # flake8-tidy-imports
+  "TRY",  # tryceratops
+  "UP",   # pyupgrade
+  "W",    # pycodestyle (Warning)
+  "YTT",  # flake8-2020
+]
+lint.ignore = [
+  "D203", # conflicts with D211
+  "D213", # conflicts with D212
+  "S404", # subprocess usage is intentional; input is fully controlled by the action
+  "S603", # subprocess usage is intentional; input is fully controlled by the action
+]
+lint.per-file-ignores."scripts/**" = [
+  "T20", # print is intentional: output goes to the GHA log
+]
+lint.per-file-ignores."tests/**" = [
+  "ANN",     # no type annotations required in tests
+  "ARG",     # fixtures appear unused to ruff
+  "D",       # no docstrings required in tests
+  "PLR2004", # allow magic values in tests
+  "PLW1514", # encoding on NamedTemporaryFile in tests is not worth the noise
+  "S101",    # allow assert statements in tests
+  "SLF",     # allow access to private members in tests
+]
+
+[tool.ty]
+environment.extra-paths = [ "scripts" ]
+
+[tool.pytest]
+ini_options.testpaths = [ "tests" ]
+ini_options.pythonpath = [ "scripts" ]
