@@ -1,0 +1,109 @@
+name: Sinistral IaC Scanner
+description: Scan Infrastructure as Code with Sinistral policies
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  iac_directories:
+    required: true
+    description: >
+      Path(s) from the root of your repo to your IaC folder(s).
+      Supports multiple directories separated by newlines.
+  recurse:
+    required: false
+    description: Recursively scan all subdirectories containing Terraform files
+    default: 'false'
+  sinistral_api_url:
+    required: true
+    description: Base URL of your Sinistral API (e.g. https://api.sinistral.example.com)
+  sinistral_auth_url:
+    required: true
+    description: Auth URL for your Sinistral instance (e.g. https://auth.console.example.com)
+  sinistral_project_client_id:
+    required: true
+    description: OAuth2 client ID for your Sinistral project
+  sinistral_project_client_secret:
+    required: true
+    description: OAuth2 client secret for your Sinistral project
+  sinistral_project:
+    required: true
+    description: Sinistral project name to scan against
+  sinistral_cli_version:
+    required: false
+    description: >
+      sinistral-cli version to use. Accepts any git ref (branch, tag, SHA) from
+      https://github.com/stacklet/sinistral-cli.
+    default: 'v0.5.34'
+
+runs:
+  using: composite
+  steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+      with:
+        enable-cache: true
+
+    - name: Install Python
+      shell: bash
+      run: uv python install 3.12
+
+    - name: Configure Sinistral and Scan
+      id: sinistral-run
+      shell: bash
+      env:
+        SINISTRAL_API_URL: ${{ inputs.sinistral_api_url }}
+        SINISTRAL_AUTH_URL: ${{ inputs.sinistral_auth_url }}
+        SINISTRAL_PROJECT_CLIENT_ID: ${{ inputs.sinistral_project_client_id }}
+        SINISTRAL_PROJECT_CLIENT_SECRET: ${{ inputs.sinistral_project_client_secret }}
+        SINISTRAL_CLI_VERSION: ${{ inputs.sinistral_cli_version }}
+        SINISTRAL_PROJECT: ${{ inputs.sinistral_project }}
+        IAC_DIRECTORIES: ${{ inputs.iac_directories }}
+        RECURSE: ${{ inputs.recurse }}
+      run: |
+        uvx --from "git+https://github.com/stacklet/sinistral-cli@${SINISTRAL_CLI_VERSION}" \
+          sinistral login
+
+        RECURSE_FLAG=""
+        if [ "${RECURSE}" = "true" ]; then
+          RECURSE_FLAG="--recurse"
+        fi
+
+        # shellcheck disable=SC2086 — RECURSE_FLAG is intentionally unquoted so it
+        # vanishes when empty rather than passing an empty-string argument.
+        uv run --no-project \
+          python "${{ github.action_path }}/scripts/run_sinistral_scans.py" \
+          --iac-directories "${IAC_DIRECTORIES}" \
+          --project "${SINISTRAL_PROJECT}" \
+          --cli-version "${SINISTRAL_CLI_VERSION}" \
+          ${RECURSE_FLAG} \
+          --github-output "$GITHUB_OUTPUT"
+
+    - name: Find Comment
+      if: "!cancelled() && github.event_name == 'pull_request'"
+      uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
+      id: fc
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-author: "github-actions[bot]"
+        body-includes: "<!-- sinistral results -->"
+
+    - name: Create or update comment
+      if: "!cancelled() && github.event_name == 'pull_request'"
+      uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+      with:
+        comment-id: ${{ steps.fc.outputs.comment-id }}
+        issue-number: ${{ github.event.pull_request.number }}
+        body: |
+          <!-- sinistral results -->
+          # Sinistral Results: [${{ steps.sinistral-run.outputs.OVERALL_STATUS }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ${{ steps.sinistral-run.outputs.SINISTRAL_RESULTS }}
+        edit-mode: replace
+
+    - name: Exit with Code
+      if: "!cancelled()"
+      shell: bash
+      env:
+        EXIT_CODE: ${{ steps.sinistral-run.outputs.EXIT_CODE }}
+      run: exit "${EXIT_CODE:-1}"
