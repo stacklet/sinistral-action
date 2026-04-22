@@ -61,6 +61,18 @@ runs:
         IAC_DIRECTORIES: ${{ inputs.iac_directories }}
         RECURSE: ${{ inputs.recurse }}
       run: |
+        missing=()
+        for var in SINISTRAL_API_URL SINISTRAL_AUTH_URL SINISTRAL_PROJECT_CLIENT_ID SINISTRAL_PROJECT_CLIENT_SECRET SINISTRAL_PROJECT IAC_DIRECTORIES; do
+          if [ -z "${!var}" ]; then
+            missing+=("$var")
+          fi
+        done
+        if [ ${#missing[@]} -gt 0 ]; then
+          echo "::error::sinistral-action: the following required inputs are empty: ${missing[*]}"
+          echo "::error::If this is a Dependabot run, confirm the corresponding secrets are configured under Settings -> Secrets and variables -> Dependabot (Actions secrets are not available to Dependabot runs)."
+          exit 1
+        fi
+
         uvx --from "git+https://github.com/stacklet/sinistral-cli@${SINISTRAL_CLI_VERSION}" \
           sinistral login
 
