@@ -75,6 +75,48 @@ Discover all subdirectories containing `.tf` files automatically:
 | `iac_directories` | Yes | — | Path(s) to IaC folders relative to the repo root. Newline-separated. |
 | `recurse` | No | `false` | Recursively discover subdirectories containing `.tf` files. |
 | `sinistral_cli_version` | No | `v0.5.34` | Git ref (tag, branch, SHA) of [sinistral-cli](https://github.com/stacklet/sinistral-cli). |
+| `post_pr_comment` | No | `true` | Whether to post scan results as a PR comment. Set to `false` for secondary scan jobs to avoid overwriting the primary comment. |
+
+### Multiple Sinistral instances
+
+To send results to a secondary instance without overwriting the primary PR comment:
+
+```yaml
+jobs:
+  sinistral-primary:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: stacklet/sinistral-action@v1
+        with:
+          sinistral_api_url: https://api.sinistral.primary.example.com
+          sinistral_auth_url: https://auth.console.primary.example.com
+          sinistral_project_client_id: ${{ secrets.SINISTRAL_PROJECT_CLIENT_ID }}
+          sinistral_project_client_secret: ${{ secrets.SINISTRAL_PROJECT_CLIENT_SECRET }}
+          sinistral_project: MyProject
+          iac_directories: terraform
+
+  sinistral-secondary:
+    runs-on: ubuntu-latest
+    continue-on-error: true  # Non-blocking
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: stacklet/sinistral-action@v1
+        with:
+          sinistral_api_url: https://api.sinistral.secondary.example.com
+          sinistral_auth_url: https://auth.console.secondary.example.com
+          sinistral_project_client_id: ${{ secrets.SINISTRAL_SECONDARY_PROJECT_CLIENT_ID }}
+          sinistral_project_client_secret: ${{ secrets.SINISTRAL_SECONDARY_PROJECT_CLIENT_SECRET }}
+          sinistral_project: MyProject
+          iac_directories: terraform
+          post_pr_comment: 'false'
+```
 
 ## Permissions
 
