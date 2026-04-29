@@ -75,11 +75,12 @@ Discover all subdirectories containing `.tf` files automatically:
 | `iac_directories` | Yes | — | Path(s) to IaC folders relative to the repo root. Newline-separated. |
 | `recurse` | No | `false` | Recursively discover subdirectories containing `.tf` files. |
 | `sinistral_cli_version` | No | `v0.5.34` | Git ref (tag, branch, SHA) of [sinistral-cli](https://github.com/stacklet/sinistral-cli). |
-| `post_pr_comment` | No | `true` | Whether to post scan results as a PR comment. Set to `false` for secondary scan jobs to avoid overwriting the primary comment. |
+| `post_pr_comment` | No | `true` | Whether to post scan results as a PR comment. |
 
-### Multiple Sinistral instances
+### Multiple Sinistral Projects
 
-To send results to a secondary instance without overwriting the primary PR comment:
+It can be useful to invoke this action more than once — for example, scanning against both a released set of policies and a "next" version. Use `post_pr_comment: false` on the secondary job so only the primary posts to the PR.
+Set `continue-on-error: true` on the secondary job to prevent a failure there from blocking the PR.
 
 ```yaml
 jobs:
@@ -92,14 +93,14 @@ jobs:
       - uses: actions/checkout@v6
       - uses: stacklet/sinistral-action@v1
         with:
-          sinistral_api_url: https://api.sinistral.primary.example.com
-          sinistral_auth_url: https://auth.console.primary.example.com
+          sinistral_api_url: https://api.sinistral.example.com
+          sinistral_auth_url: https://auth.console.example.com
           sinistral_project_client_id: ${{ secrets.SINISTRAL_PROJECT_CLIENT_ID }}
           sinistral_project_client_secret: ${{ secrets.SINISTRAL_PROJECT_CLIENT_SECRET }}
           sinistral_project: MyProject
           iac_directories: terraform
 
-  sinistral-secondary:
+  sinistral-next:
     runs-on: ubuntu-latest
     continue-on-error: true  # Non-blocking
     permissions:
@@ -109,11 +110,11 @@ jobs:
       - uses: actions/checkout@v6
       - uses: stacklet/sinistral-action@v1
         with:
-          sinistral_api_url: https://api.sinistral.secondary.example.com
-          sinistral_auth_url: https://auth.console.secondary.example.com
-          sinistral_project_client_id: ${{ secrets.SINISTRAL_SECONDARY_PROJECT_CLIENT_ID }}
-          sinistral_project_client_secret: ${{ secrets.SINISTRAL_SECONDARY_PROJECT_CLIENT_SECRET }}
-          sinistral_project: MyProject
+          sinistral_api_url: https://api.sinistral.example.com
+          sinistral_auth_url: https://auth.console.example.com
+          sinistral_project_client_id: ${{ secrets.SINISTRAL_NEXT_PROJECT_CLIENT_ID }}
+          sinistral_project_client_secret: ${{ secrets.SINISTRAL_NEXT_PROJECT_CLIENT_SECRET }}
+          sinistral_project: MyProject-next
           iac_directories: terraform
           post_pr_comment: 'false'
 ```
