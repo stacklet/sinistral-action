@@ -35,6 +35,10 @@ inputs:
       sinistral-cli version to use. Accepts any git ref (branch, tag, SHA) from
       https://github.com/stacklet/sinistral-cli.
     default: 'v0.5.34'
+  post_pr_comment:
+    required: false
+    description: Whether to post scan results as a PR comment.
+    default: 'true'
 
 runs:
   using: composite
@@ -92,7 +96,7 @@ runs:
           --github-output "$GITHUB_OUTPUT"
 
     - name: Find Comment
-      if: "!cancelled() && github.event_name == 'pull_request'"
+      if: "!cancelled() && github.event_name == 'pull_request' && inputs.post_pr_comment == 'true'"
       uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
       id: fc
       with:
@@ -101,7 +105,7 @@ runs:
         body-includes: "<!-- sinistral results -->"
 
     - name: Create or update comment
-      if: "!cancelled() && github.event_name == 'pull_request'"
+      if: "!cancelled() && github.event_name == 'pull_request' && inputs.post_pr_comment == 'true'"
       uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
       with:
         comment-id: ${{ steps.fc.outputs.comment-id }}
