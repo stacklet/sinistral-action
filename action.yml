@@ -34,7 +34,7 @@ inputs:
     description: >
       sinistral-cli version to use. Accepts any git ref (branch, tag, SHA) from
       https://github.com/stacklet/sinistral-cli.
-    default: 'v0.5.36'
+    default: '8552c68f72b9df5bb4985f722fec4063ebb35218' # v0.5.36
   post_pr_comment:
     required: false
     description: Whether to post scan results as a PR comment.
