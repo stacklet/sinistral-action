@@ -167,8 +167,16 @@ def read_doc(text: str) -> str | None:
 
 
 def write_doc(text: str, name: str) -> str:
-    """Return README text with the input's documented default set to name."""
-    return README_ROW.sub(lambda match: f"{match[1]}{name}{match[3]}", text, count=1)
+    """Return README text with the input's documented default set to name.
+
+    A row that no longer matches would substitute nothing, and a silent no-op
+    here would be reported as an updated file, so this fails like write_pin
+    does when the pin has nowhere to go.
+    """
+    updated, count = README_ROW.subn(lambda match: f"{match[1]}{name}{match[3]}", text, count=1)
+    if not count:
+        fail(f"no `{INPUT_NAME}` row found in {README_FILE.name}")
+    return updated
 
 
 def read_file(path: Path) -> str:

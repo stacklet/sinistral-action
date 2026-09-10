@@ -149,6 +149,16 @@ class TestReadme:
     def test_missing_row_returns_none(self):
         assert read_doc("| Input | Required |\n| `other` | No | `x` |\n") is None
 
+    def test_missing_row_exits_rather_than_substituting_nothing(self):
+        with pytest.raises(SystemExit):
+            write_doc("| Input | Required |\n| `other` | No | `x` |\n", "v0.5.38")
+
+    def test_reformatted_row_exits(self):
+        # An extra space in the Required column stops the row from matching;
+        # reporting it as updated would leave the documented default stale.
+        with pytest.raises(SystemExit):
+            write_doc("| `sinistral_cli_version` |  No  | `v0.5.34` | desc |\n", "v0.5.38")
+
 
 class TestDescribe:
     def test_prefers_a_tag_on_the_commit(self):
@@ -264,16 +274,25 @@ class TestApply:
         self.write(SHA, "demo-fixes (2023-03-13)", "demo-fixes (2023-03-13)")
         assert apply(Pin(SHA, "dbefcee (2023-03-13)")) == ["action.yml", "README.md"]
 
-    def test_unwritable_file_exits_without_claiming_success(self):
-        # A failed write must never be reported as a completed pin.
+    def test_unwritable_file_exits_without_claiming_success(self, monkeypatch):
+        # A failed write must never be reported as a completed pin. Denying the
+        # write directly rather than via chmod keeps this meaningful as root,
+        # who is not stopped by a read-only mode bit.
         self.write(OLD_SHA, "v0.5.36", "v0.5.34")
-        self.action.chmod(0o444)
-        try:
-            with pytest.raises(SystemExit):
-                apply(Pin(SHA, "v0.5.38"))
-        finally:
-            self.action.chmod(0o644)
+
+        def deny(*args, **kwargs):
+            raise OSError(13, "Permission denied")
+
+        monkeypatch.setattr("pathlib.Path.write_text", deny)
+        with pytest.raises(SystemExit):
+            apply(Pin(SHA, "v0.5.38"))
         assert read_pin(self.action.read_text(encoding="utf-8")) == Pin(OLD_SHA, "v0.5.36")
+
+    def test_missing_readme_row_exits_without_claiming_an_update(self):
+        self.write(OLD_SHA, "v0.5.36", "v0.5.34")
+        self.readme.write_text("| Input | Required |\n| `other` | No | `x` |\n", encoding="utf-8")
+        with pytest.raises(SystemExit):
+            apply(Pin(SHA, "v0.5.38"))
 
     def test_missing_file_exits(self):
         self.write(OLD_SHA, "v0.5.36", "v0.5.34")
