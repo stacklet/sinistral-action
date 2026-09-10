@@ -1,0 +1,21 @@
+action.yml
+  s_1e84b87f6ee5fc::t_b3c4a4a77f2e7b 37
+README.md
+  s_1e84b87f6ee5fc::t_b3c4a4a77f2e7b 113
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "3c5dc3ab5bf8a0458593a798597fcd1c2009724c",
+  "prompts": {},
+  "sessions": {
+    "s_1e84b87f6ee5fc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e9f9dda-80dd-4d9e-b55d-e360e9a44d0c",
+        "model": "claude-opus-5"
+      },
+      "human_author": "AJ Kerrigan <aj@stacklet.io>"
+    }
+  }
+}
