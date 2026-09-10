@@ -18,10 +18,16 @@ it inherits an existing login rather than needing a token of its own.
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, NoReturn
+
+# Decoded JSON from the GitHub API: an object or an array, shaped by whichever
+# endpoint produced it.
+type Json = Any
 
 DESCRIPTION = "Repoint the action's default sinistral-cli version at a resolved commit."
 DEFAULT_REPO = "stacklet/sinistral-cli"
@@ -51,29 +57,35 @@ class Pin(NamedTuple):
     name: str
 
 
-def fail(message: str) -> Any:
+def fail(message: str) -> NoReturn:
     """Report an error and exit non-zero."""
     print(f"error: {message}", file=sys.stderr)
     raise SystemExit(1)
 
 
-def gh_api(path: str) -> Any:
+def gh_path() -> str:
+    """Locate the `gh` CLI, with install guidance if it isn't on PATH."""
+    found = shutil.which("gh")
+    if found is None:
+        fail("'gh' not found. Install the GitHub CLI and run `gh auth login`.")
+    return found
+
+
+def gh_api(path: str) -> Json:
     """Fetch a GitHub API path through the `gh` CLI and parse the JSON response."""
     try:
         result = subprocess.run(
-            ["gh", "api", path],
+            [gh_path(), "api", path],
             capture_output=True,
             text=True,
             check=True,
         )
-    except FileNotFoundError:
-        return fail("'gh' not found. Install the GitHub CLI and run `gh auth login`.")
     except subprocess.CalledProcessError as error:
-        return fail(error.stderr.strip() or f"gh api {path} failed")
+        fail(error.stderr.strip() or f"gh api {path} failed")
     return json.loads(result.stdout)
 
 
-def find_tag(repo: str, sha: str, *, api: Any = gh_api) -> str | None:
+def find_tag(repo: str, sha: str, *, api: Callable[[str], Json] = gh_api) -> str | None:
     """Return the first tag pointing at the given commit, or None if it has none."""
     for page in range(1, MAX_TAG_PAGES + 1):
         tags = api(f"repos/{repo}/tags?per_page={TAG_PAGE_SIZE}&page={page}")
@@ -98,7 +110,7 @@ def describe(ref: str, sha: str, date: str, tag: str | None) -> str:
     return f"{label} ({date})"
 
 
-def resolve(repo: str, ref: str, *, api: Any = gh_api) -> Pin:
+def resolve(repo: str, ref: str, *, api: Callable[[str], Json] = gh_api) -> Pin:
     """Resolve any git ref (or "latest") to a commit SHA and a name for it."""
     if ref == "latest":
         ref = api(f"repos/{repo}/releases/latest")["tag_name"]
@@ -141,7 +153,7 @@ def write_pin(text: str, pin: Pin) -> str:
     lines = text.splitlines()
     index = pin_line_index(lines)
     if index is None:
-        return fail(f"no `default:` found for `{INPUT_NAME}` in {ACTION_FILE.name}")
+        fail(f"no `default:` found for `{INPUT_NAME}` in {ACTION_FILE.name}")
     match = PIN_LINE.match(lines[index])
     indent = match["indent"] if match else "    "
     lines[index] = f"{indent}default: '{pin.sha}' # {pin.name}"
@@ -164,7 +176,7 @@ def read_file(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8")
     except OSError as error:
-        return fail(f"could not read {path.name}: {error.strerror}")
+        fail(f"could not read {path.name}: {error.strerror}")
 
 
 def write_file(path: Path, text: str) -> None:
