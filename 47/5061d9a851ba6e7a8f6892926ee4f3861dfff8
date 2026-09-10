@@ -1,0 +1,19 @@
+scripts/bump_cli_version.py
+  s_1e84b87f6ee5fc::t_5f5374fc0e370a 21,24,26-30,60,66-74,78,84,88,113,156,179
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "475061d9a851ba6e7a8f6892926ee4f3861dfff8",
+  "prompts": {},
+  "sessions": {
+    "s_1e84b87f6ee5fc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e9f9dda-80dd-4d9e-b55d-e360e9a44d0c",
+        "model": "claude-opus-5"
+      },
+      "human_author": "AJ Kerrigan <aj@stacklet.io>"
+    }
+  }
+}
