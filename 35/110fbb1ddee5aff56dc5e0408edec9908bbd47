@@ -1,0 +1,26 @@
+scripts/bump_cli_version.py
+  s_1e84b87f6ee5fc::t_426e0c5ef55c9e 1-25,27-184,186-212
+  s_1e84b87f6ee5fc::t_dcacb621f76c73 26,185
+tests/test_bump_cli_version.py
+  s_1e84b87f6ee5fc::t_0b31e7141cda0b 1-30,32-45,48-55,60-63,68-84,86-90,92-99,101-108,110,112-117,119-166,168,181,183,185,187-194,196-198,200-202,204-208,210-215,217-221,223-226,228-240,243-245,247-249,251-253,255-258,260-263,265-267,269-272
+  s_1e84b87f6ee5fc::t_8171f5f679ea4b 31,46-47,56,64,85,91,100,109,111,118,241-242,246,250,254,259,264,268
+  s_1e84b87f6ee5fc::t_dcacb621f76c73 57-59,65-67,167,169-180,182,184,186,195,199,203,209,216,222,227
+justfile
+  s_1e84b87f6ee5fc::t_9e5fd0007d95ac 19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "35110fbb1ddee5aff56dc5e0408edec9908bbd47",
+  "prompts": {},
+  "sessions": {
+    "s_1e84b87f6ee5fc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e9f9dda-80dd-4d9e-b55d-e360e9a44d0c",
+        "model": "claude-opus-5"
+      },
+      "human_author": "AJ Kerrigan <aj@stacklet.io>"
+    }
+  }
+}
