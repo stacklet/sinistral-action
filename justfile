@@ -13,3 +13,7 @@ format:
 # Run script unit tests
 test:
     uv run pytest -v
+
+# Bump the default sinistral_cli_version (ref: tag, branch, or SHA; default latest release)
+bump-cli-version ref="latest":
+    uv run scripts/bump_cli_version.py {{quote(ref)}}
