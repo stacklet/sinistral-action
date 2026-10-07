@@ -110,7 +110,7 @@ Set `skip_unchanged: 'false'` to always scan:
 | `sinistral_project` | Yes | — | Sinistral project name to scan against. |
 | `iac_directories` | Yes | — | Path(s) to IaC folders relative to the repo root. Newline-separated. |
 | `recurse` | No | `false` | Recursively discover subdirectories containing `.tf` files. |
-| `sinistral_cli_version` | No | `v0.5.38` | Git ref (tag, branch, SHA) of [sinistral-cli](https://github.com/stacklet/sinistral-cli). |
+| `sinistral_cli_version` | No | `v0.5.39` | Git ref (tag, branch, SHA) of [sinistral-cli](https://github.com/stacklet/sinistral-cli). |
 | `post_pr_comment` | No | `true` | Whether to post scan results as a PR comment. |
 | `skip_unchanged` | No | `true` | Skip the scan when no Terraform files under `iac_directories` changed. Fails open. See [Skipping unchanged runs](#skipping-unchanged-runs). |
 
